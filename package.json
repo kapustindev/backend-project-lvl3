@@ -1,0 +1,51 @@
+{
+  "name": "backend-project-lvl3",
+  "version": "0.0.1",
+  "description": "download pages with local paths",
+  "main": "dist/index.js",
+  "bin": {
+    "page-loader": "dist/bin/page-loader.js"
+  },
+  "scripts": {
+    "test": "jest",
+    "build": "NODE_ENV=production babel src --out-dir dist",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AntonLettuce/backend-project-lvl3.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "page",
+    "download"
+  ],
+  "author": "Anton Kapustin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AntonLettuce/backend-project-lvl3/issues"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "homepage": "https://github.com/AntonLettuce/backend-project-lvl3#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/node": "^7.8.7",
+    "@babel/preset-env": "^7.9.0",
+    "babel-eslint": "^10.1.0",
+    "babel-jest": "^25.2.4",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-plugin-babel": "^5.3.0",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-jest": "^23.8.2",
+    "jest": "^25.2.4"
+  },
+  "dependencies": {
+    "commander": "^5.0.0"
+  }
+}
