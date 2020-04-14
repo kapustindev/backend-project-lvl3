@@ -11,3 +11,5 @@ test-coverage:
 build:
 	rm -rf dist
 	npm run build
+debug:
+	DEBUG=* make test
