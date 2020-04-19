@@ -12,3 +12,12 @@ $ make install
 ```sh
 $ make test
 ```
+
+### How to install
+[![asciicast](https://asciinema.org/a/9NnhXTEibabnnqX7rAKFhhVz5.svg)](https://asciinema.org/a/9NnhXTEibabnnqX7rAKFhhVz5)
+### How it works
+[![asciicast](https://asciinema.org/a/FXrEiHIXkaNmHex1rA5AgvWK1.svg)](https://asciinema.org/a/FXrEiHIXkaNmHex1rA5AgvWK1)
+### How to debug
+[![asciicast](https://asciinema.org/a/nQ17FMIYidLsxBZHf2jn0ak6J.svg)](https://asciinema.org/a/nQ17FMIYidLsxBZHf2jn0ak6J)
+### Errors
+[![asciicast](https://asciinema.org/a/4Jal4M4LqoJ2XP8guDiUFD7R1.svg)](https://asciinema.org/a/4Jal4M4LqoJ2XP8guDiUFD7R1)
