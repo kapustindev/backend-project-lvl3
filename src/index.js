@@ -2,6 +2,7 @@ import axios from 'axios';
 import { promises as fsPromises } from 'fs';
 import path from 'path';
 import cheerio from 'cheerio';
+import Listr from 'listr';
 import debug from 'debug';
 import makeClearName from './utils/name-cleaner';
 import 'axios-debug-log';
@@ -48,19 +49,25 @@ export default (url, dir = process.cwd()) => {
       return null;
     })
     .then((links) => {
-      const newLinks = links.map((link) => {
+      const newLinks = [];
+
+      const newListrLinks = links.map((link) => {
         const supportFileLink = new URL(link, url);
         const supportFileName = makeClearName(link, url);
         const supportFilePath = path.join(`${mainFilePath}_files`, supportFileName);
         const newLocalLink = path.join(`${mainFileName}_files`, supportFileName);
-        axios
-          .get(supportFileLink.href)
-          .then((parsedData) => parsedData.data)
-          .then((data) => {
-            fsPromises.writeFile(supportFilePath, data);
-          });
-        return newLocalLink;
+        newLinks.push(newLocalLink);
+        return {
+          title: supportFileLink.href,
+          task: () => axios
+            .get(supportFileLink.href)
+            .then((parsedData) => parsedData.data)
+            .then((data) => {
+              fsPromises.writeFile(supportFilePath, data);
+            }),
+        };
       });
+      new Listr(newListrLinks).run();
       log('support content dowloaded');
       return [links, newLinks];
     })
