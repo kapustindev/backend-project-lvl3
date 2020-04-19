@@ -11,7 +11,12 @@ program
   .option('--output [localPath]', 'future path of downloaded page', process.cwd())
   .action((pageUrl) => {
     downloadPage(pageUrl, program.output)
-      .then(() => console.log('good!'))
-      .catch(() => console.log('bad!'));
+      .then((filename) => {
+        console.log(`${pageUrl} saved as ${filename}`);
+      })
+      .catch((error) => {
+        console.error(error.message);
+        process.exit(1);
+      });
   })
   .parse(process.argv);

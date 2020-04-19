@@ -12,4 +12,4 @@ build:
 	rm -rf dist
 	npm run build
 debug:
-	DEBUG=* make test
+	DEBUG=page-loader,axios make test
