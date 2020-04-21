@@ -18,4 +18,4 @@ build:
 	npm run build
 
 debug:
-	DEBUG=page-loader,axios make test
+	DEBUG=page-loader,axios,nock make test

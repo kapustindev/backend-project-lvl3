@@ -5,7 +5,6 @@ import cheerio from 'cheerio';
 import Listr from 'listr';
 import debug from 'debug';
 import makeClearName from './utils/name-cleaner';
-import 'axios-debug-log';
 
 const log = debug('page-loader');
 
@@ -33,17 +32,17 @@ export default (url, dir = process.cwd()) => {
     .then(() => {
       const $ = cheerio.load(htmlData);
       const tagUrls = Object.keys(mapping).map((tag) => $(tag).map((i, el) => {
-        const supportFileUrl = $(el).attr(mapping[tag]);
-        return supportFileUrl;
+        const assetFileUrl = $(el).attr(mapping[tag]);
+        return assetFileUrl;
       }).get()).flat().filter((url1) => !url1.includes('//'));
-      log('support links are filtered');
+      log('assets links are filtered');
       return tagUrls;
     })
     .then((tagUrls) => {
       if (tagUrls.length > 0) {
         const dirPath = path.join(`${mainFilePath}_files`);
         fsPromises.mkdir(dirPath);
-        log('support directory created');
+        log('assets directory created');
         return tagUrls;
       }
       return null;
@@ -52,23 +51,23 @@ export default (url, dir = process.cwd()) => {
       const newLinks = [];
 
       const newListrLinks = links.map((link) => {
-        const supportFileLink = new URL(link, url);
-        const supportFileName = makeClearName(link, url);
-        const supportFilePath = path.join(`${mainFilePath}_files`, supportFileName);
-        const newLocalLink = path.join(`${mainFileName}_files`, supportFileName);
+        const assetFileLink = new URL(link, url);
+        const assetFileName = makeClearName(link, url);
+        const assetFilePath = path.join(`${mainFilePath}_files`, assetFileName);
+        const newLocalLink = path.join(`${mainFileName}_files`, assetFileName);
         newLinks.push(newLocalLink);
         return {
-          title: supportFileLink.href,
+          title: assetFileLink.href,
           task: () => axios
-            .get(supportFileLink.href)
+            .get(assetFileLink.href)
             .then((parsedData) => parsedData.data)
             .then((data) => {
-              fsPromises.writeFile(supportFilePath, data);
+              fsPromises.writeFile(assetFilePath, data);
             }),
         };
       });
       new Listr(newListrLinks).run();
-      log('support content dowloaded');
+      log('assets dowloaded');
       return [links, newLinks];
     })
     .then((newUrls) => {
