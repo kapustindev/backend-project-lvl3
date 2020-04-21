@@ -13,10 +13,10 @@ $ make install
 $ make test
 ```
 
-### How to install
+### How to start
 [![asciicast](https://asciinema.org/a/9NnhXTEibabnnqX7rAKFhhVz5.svg)](https://asciinema.org/a/9NnhXTEibabnnqX7rAKFhhVz5)
 ### How it works
-[![asciicast](https://asciinema.org/a/FXrEiHIXkaNmHex1rA5AgvWK1.svg)](https://asciinema.org/a/FXrEiHIXkaNmHex1rA5AgvWK1)
+[![asciicast](https://asciinema.org/a/lUDepu1xJ3FLp44T8Ln5yTRgq.svg)](https://asciinema.org/a/lUDepu1xJ3FLp44T8Ln5yTRgq)
 ### How to debug
 [![asciicast](https://asciinema.org/a/nQ17FMIYidLsxBZHf2jn0ak6J.svg)](https://asciinema.org/a/nQ17FMIYidLsxBZHf2jn0ak6J)
 ### Errors
