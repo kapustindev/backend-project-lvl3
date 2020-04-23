@@ -14,18 +14,15 @@ const getFixturePath = (filename) => path.join(__dirname, '..', '__fixtures__', 
 describe('correct data test', () => {
   const responseData = getFixturePath('before.html');
   const resultData = getFixturePath('after.html');
-  const site = new URL('https://antonlettuce.github.io/hexlet-basics/testing-file');
-  const domain = site.origin;
+  const url = new URL('https://antonlettuce.github.io/hexlet-basics/testing-file');
+  const domain = url.origin;
 
   test('basic download', async () => {
     const tempDir = await fsPromises.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
     const response = await fsPromises.readFile(responseData, 'utf-8');
-    const expectedHtml = await fsPromises.readFile(resultData, 'utf-8');
-    const downloadedFilePath = path.join(tempDir, 'antonlettuce-github-io-hexlet-basics-testing-file.html');
-    const assetPath = path.join(tempDir, 'antonlettuce-github-io-hexlet-basics-testing-file_files', 'assets-application.js');
 
     nock(domain)
-      .get(site.pathname)
+      .get(url.pathname)
       .reply(200, response)
       .log(console.log);
     nock(domain)
@@ -37,9 +34,12 @@ describe('correct data test', () => {
       .reply(200, 'testcode')
       .log(console.log);
 
-    await pageLoader('https://antonlettuce.github.io/hexlet-basics/testing-file', tempDir);
+    await pageLoader(url.href, tempDir);
 
+    const expectedHtml = await fsPromises.readFile(resultData, 'utf-8');
+    const downloadedFilePath = path.join(tempDir, 'antonlettuce-github-io-hexlet-basics-testing-file.html');
     const actualHtml = await fsPromises.readFile(downloadedFilePath, 'utf-8');
+    const assetPath = path.join(tempDir, 'antonlettuce-github-io-hexlet-basics-testing-file_files', 'assets-application.js');
     const asset = await fsPromises.readFile(assetPath, 'utf-8');
 
     expect(actualHtml).toEqual(expectedHtml);
@@ -48,14 +48,14 @@ describe('correct data test', () => {
 
   test('404 error', async () => {
     nock(domain)
-      .get(site.pathname)
+      .get(url.pathname)
       .reply(404)
       .log(console.log);
 
-    await expect(pageLoader('https://antonlettuce.github.io/hexlet-basics/testing-file')).rejects.toThrow();
+    await expect(pageLoader(url.href)).rejects.toThrow();
   });
 
   test('no output directory', async () => {
-    await expect(pageLoader('https://antonlettuce.github.io/hexlet-basics/testing-file', '/nonexist')).rejects.toThrow();
+    await expect(pageLoader(url.href, '/nonexist')).rejects.toThrow();
   });
 });
