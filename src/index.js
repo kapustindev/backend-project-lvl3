@@ -4,7 +4,7 @@ import path from 'path';
 import cheerio from 'cheerio';
 import Listr from 'listr';
 import debug from 'debug';
-import makeClearName from './utils/name-cleaner';
+import { isLocal, slugMain, slugAsset } from './utils.js';
 
 const log = debug('page-loader');
 
@@ -14,72 +14,54 @@ const mapping = {
   img: 'src',
 };
 
-export default (url, dir = process.cwd()) => {
-  const mainFileName = makeClearName(url);
+export default (url, dir) => {
+  const site = new URL(url);
+  const mainFileName = slugMain(site);
   const mainFilePath = path.join(dir, mainFileName);
+  const assetsDirPath = path.join(`${mainFilePath}_files`);
 
   let htmlData;
+  const assetLinks = [];
 
   log('start');
   return axios
     .get(url)
-    .then((parsedData) => {
-      htmlData = parsedData.data;
-      return htmlData;
-    })
-    .then((final) => fsPromises.writeFile(`${mainFilePath}.html`, final))
-    .then(() => log('main page downloaded'))
-    .then(() => {
-      const $ = cheerio.load(htmlData);
-      const tagUrls = Object.keys(mapping).map((tag) => $(tag).map((i, el) => {
+    .then(({ data }) => {
+      const $ = cheerio.load(data);
+      Object.keys(mapping).forEach((tag) => $(tag).each((i, el) => {
         const assetFileUrl = $(el).attr(mapping[tag]);
-        return assetFileUrl;
-      }).get()).flat().filter((url1) => !url1.includes('//'));
-      log('assets links are filtered');
-      return tagUrls;
+        if (isLocal(assetFileUrl, site)) {
+          const assetFileName = slugAsset(assetFileUrl, site.href);
+          const newLocalLink = path.join(`${mainFileName}_files`, assetFileName);
+          $(el).attr(mapping[tag], newLocalLink);
+          assetLinks.push([assetFileUrl, assetFileName]);
+        }
+      }));
+      htmlData = $.html();
     })
-    .then((tagUrls) => {
-      if (tagUrls.length > 0) {
-        const dirPath = path.join(`${mainFilePath}_files`);
-        fsPromises.mkdir(dirPath);
-        log('assets directory created');
-        return tagUrls;
-      }
-      return null;
-    })
-    .then((links) => {
-      const newLinks = [];
-
-      const newListrLinks = links.map((link) => {
+    .then(() => log('assets links are changed'))
+    .then(() => fsPromises.mkdir(assetsDirPath))
+    .then(() => log('assets directory created'))
+    .then(() => {
+      const newListrLinks = assetLinks.map((assetFile) => {
+        const [link, name] = assetFile;
         const assetFileLink = new URL(link, url);
-        const assetFileName = makeClearName(link, url);
-        const assetFilePath = path.join(`${mainFilePath}_files`, assetFileName);
-        const newLocalLink = path.join(`${mainFileName}_files`, assetFileName);
-        newLinks.push(newLocalLink);
+        const assetFilePath = path.join(`${mainFilePath}_files`, name);
         return {
           title: assetFileLink.href,
           task: () => axios
-            .get(assetFileLink.href)
-            .then((parsedData) => parsedData.data)
-            .then((data) => {
-              fsPromises.writeFile(assetFilePath, data);
+            .get(assetFileLink.href, { responseType: 'arraybuffer' })
+            .then((response) => {
+              fsPromises.writeFile(assetFilePath, response.data);
             }),
         };
       });
-      new Listr(newListrLinks).run();
-      log('assets dowloaded');
-      return [links, newLinks];
+      new Listr(newListrLinks, { concurrent: true, exitOnError: false }).run();
     })
-    .then((newUrls) => {
-      const [oldLinks, newLinks] = newUrls;
-      const newHtml = oldLinks
-        .reduce((acc, val, index) => acc.replace(val, newLinks[index]), htmlData);
-      log('links are rewrited');
-      return newHtml;
-    })
-    .then((result) => {
-      fsPromises.writeFile(`${mainFilePath}.html`, result);
-      log('main file rewrited');
+    .then(() => log('assets dowloaded'))
+    .then(() => {
+      fsPromises.writeFile(`${mainFilePath}.html`, htmlData)
+        .then(() => log('main file has been written'));
       return `${mainFileName}.html`;
     });
 };

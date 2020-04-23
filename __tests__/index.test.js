@@ -52,7 +52,7 @@ describe('correct data test', () => {
       .reply(404)
       .log(console.log);
 
-    await expect(pageLoader(url.href)).rejects.toThrow();
+    await expect(pageLoader(url.href, '/404')).rejects.toThrow();
   });
 
   test('no output directory', async () => {
