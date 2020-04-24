@@ -4,7 +4,7 @@ import path from 'path';
 import cheerio from 'cheerio';
 import Listr from 'listr';
 import debug from 'debug';
-import { isLocal, slugMain, slugAsset } from './utils.js';
+import { isLocal, makeMainSlug, makeAssetSlug } from './utils.js';
 
 const log = debug('page-loader');
 
@@ -16,8 +16,9 @@ const mapping = {
 
 export default (url, dir) => {
   const site = new URL(url);
-  const mainFileName = slugMain(site);
+  const mainFileName = makeMainSlug(site);
   const mainFilePath = path.join(dir, mainFileName);
+  const assetsDir = `${mainFileName}_files`;
   const assetsDirPath = `${mainFilePath}_files`;
 
   const assetLinks = [];
@@ -31,8 +32,8 @@ export default (url, dir) => {
         .map((tag) => $(tag).filter((i, el) => $(el).attr(mapping[tag])).each((i, el) => {
           const assetFileUrl = $(el).attr(mapping[tag]);
           if (isLocal(assetFileUrl, site)) {
-            const assetFileName = slugAsset(assetFileUrl);
-            const assetLocalPath = path.join(`${mainFileName}_files`, assetFileName);
+            const assetFileName = makeAssetSlug(assetFileUrl);
+            const assetLocalPath = path.join(assetsDir, assetFileName);
 
             $(el).attr(mapping[tag], assetLocalPath);
             assetLinks.push({ name: assetFileName, link: assetFileUrl });

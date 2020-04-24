@@ -1,9 +1,9 @@
-const slugMain = (url) => {
+const makeMainSlug = (url) => {
   const href = `${url.hostname}${url.pathname}`;
   return href.replace(/\W/g, '-');
 };
 
-const slugAsset = (url) => {
+const makeAssetSlug = (url) => {
   const changedUrl = url.replace(/\//g, '-');
   return changedUrl[0] === '-' ? changedUrl.slice(1) : changedUrl;
 };
@@ -14,7 +14,7 @@ const isLocal = (filepath, mainUrl) => {
 };
 
 export {
-  slugMain,
-  slugAsset,
+  makeMainSlug,
+  makeAssetSlug,
   isLocal,
 };
