@@ -32,10 +32,10 @@ export default (url, dir) => {
           const assetFileUrl = $(el).attr(mapping[tag]);
           if (isLocal(assetFileUrl, site)) {
             const assetFileName = slugAsset(assetFileUrl);
-            const assetLocalPath = path.join(assetsDirPath, assetFileName);
+            const assetLocalPath = path.join(`${mainFileName}_files`, assetFileName);
 
             $(el).attr(mapping[tag], assetLocalPath);
-            assetLinks.push({ name: assetFileName, link: assetFileUrl, localPath: assetLocalPath });
+            assetLinks.push({ name: assetFileName, link: assetFileUrl });
             log('changed from %o to %o', assetFileUrl, assetFileName);
           }
         }));
@@ -46,13 +46,14 @@ export default (url, dir) => {
     .then(() => fsPromises.mkdir(assetsDirPath))
     .then(() => log('created directory for assets: %o', assetsDirPath))
     .then(() => {
-      const tasks = assetLinks.map(({ name, link, localPath }) => {
+      const tasks = assetLinks.map(({ name, link }) => {
         const assetFileLink = new URL(link, url);
+        const assetLocalPath = path.join(assetsDirPath, name);
         return {
           title: assetFileLink.href,
           task: () => axios
             .get(assetFileLink.href, { responseType: 'arraybuffer' })
-            .then((response) => fsPromises.writeFile(localPath, response.data))
+            .then((response) => fsPromises.writeFile(assetLocalPath, response.data))
             .then(() => log('%o downloaded', name)),
         };
       });
