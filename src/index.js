@@ -18,9 +18,8 @@ export default (url, dir) => {
   const site = new URL(url);
   const mainFileName = slugMain(site);
   const mainFilePath = path.join(dir, mainFileName);
-  const assetsDirPath = path.join(`${mainFilePath}_files`);
+  const assetsDirPath = `${mainFilePath}_files`;
 
-  let htmlData;
   const assetLinks = [];
 
   log('start');
@@ -28,40 +27,35 @@ export default (url, dir) => {
     .get(url)
     .then(({ data }) => {
       const $ = cheerio.load(data);
-      Object.keys(mapping).forEach((tag) => $(tag).each((i, el) => {
-        const assetFileUrl = $(el).attr(mapping[tag]);
-        if (isLocal(assetFileUrl, site)) {
-          const assetFileName = slugAsset(assetFileUrl, site.href);
-          const newLocalLink = path.join(`${mainFileName}_files`, assetFileName);
-          $(el).attr(mapping[tag], newLocalLink);
-          assetLinks.push([assetFileUrl, assetFileName]);
-        }
-      }));
-      htmlData = $.html();
+      Object.keys(mapping)
+        .map((tag) => $(tag).filter((i, el) => $(el).attr(mapping[tag])).each((i, el) => {
+          const assetFileUrl = $(el).attr(mapping[tag]);
+          if (isLocal(assetFileUrl, site)) {
+            const assetFileName = slugAsset(assetFileUrl);
+            const assetLocalPath = path.join(assetsDirPath, assetFileName);
+
+            $(el).attr(mapping[tag], assetLocalPath);
+            assetLinks.push({ name: assetFileName, link: assetFileUrl, localPath: assetLocalPath });
+            log('changed from %o to %o', assetFileUrl, assetFileName);
+          }
+        }));
+      return $.html();
     })
-    .then(() => log('assets links are changed'))
+    .then((html) => fsPromises.writeFile(`${mainFilePath}.html`, html))
+    .then(() => log('%o has been written', mainFileName))
     .then(() => fsPromises.mkdir(assetsDirPath))
-    .then(() => log('assets directory created'))
+    .then(() => log('created directory for assets: %o', assetsDirPath))
     .then(() => {
-      const newListrLinks = assetLinks.map((assetFile) => {
-        const [link, name] = assetFile;
+      const tasks = assetLinks.map(({ name, link, localPath }) => {
         const assetFileLink = new URL(link, url);
-        const assetFilePath = path.join(`${mainFilePath}_files`, name);
         return {
           title: assetFileLink.href,
           task: () => axios
             .get(assetFileLink.href, { responseType: 'arraybuffer' })
-            .then((response) => {
-              fsPromises.writeFile(assetFilePath, response.data);
-            }),
+            .then((response) => fsPromises.writeFile(localPath, response.data))
+            .then(() => log('%o downloaded', name)),
         };
       });
-      new Listr(newListrLinks, { concurrent: true, exitOnError: false }).run();
-    })
-    .then(() => log('assets dowloaded'))
-    .then(() => {
-      fsPromises.writeFile(`${mainFilePath}.html`, htmlData)
-        .then(() => log('main file has been written'));
-      return `${mainFileName}.html`;
+      return new Listr(tasks, { concurrent: true, exitOnError: false }).run();
     });
 };

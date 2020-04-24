@@ -3,15 +3,14 @@ const slugMain = (url) => {
   return href.replace(/\W/g, '-');
 };
 
-const slugAsset = (url, base) => {
-  const objURL = new URL(url, base);
-  const supFile = objURL.pathname;
-  return supFile.split('/').join('-').slice(1);
+const slugAsset = (url) => {
+  const changedUrl = url.replace(/\//g, '-');
+  return changedUrl[0] === '-' ? changedUrl.slice(1) : changedUrl;
 };
 
 const isLocal = (filepath, mainUrl) => {
-  const assetUrl = new URL(filepath, mainUrl.href);
-  return filepath ? assetUrl.hostname === mainUrl.hostname : false;
+  const assetUrl = new URL(filepath, mainUrl);
+  return assetUrl.origin === mainUrl.origin;
 };
 
 export {
