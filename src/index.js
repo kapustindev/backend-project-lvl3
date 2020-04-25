@@ -16,12 +16,15 @@ const mapping = {
 
 export default (url, dir) => {
   const site = new URL(url);
-  const mainFileName = makeMainSlug(site);
+  const mainSlug = makeMainSlug(site);
+
+  const mainFileName = `${mainSlug}.html`;
   const mainFilePath = path.join(dir, mainFileName);
-  const assetsDir = `${mainFileName}_files`;
-  const assetsDirPath = `${mainFilePath}_files`;
+  const assetsDirName = `${mainSlug}_files`;
+  const assetsDirPath = path.join(dir, assetsDirName);
 
   const assetLinks = [];
+  let html;
 
   log('start');
   return axios
@@ -31,30 +34,32 @@ export default (url, dir) => {
       Object.keys(mapping)
         .map((tag) => $(tag).filter((i, el) => $(el).attr(mapping[tag])).each((i, el) => {
           const assetFileUrl = $(el).attr(mapping[tag]);
+
           if (isLocal(assetFileUrl, site)) {
-            const assetFileName = makeAssetSlug(assetFileUrl);
-            const assetLocalPath = path.join(assetsDir, assetFileName);
+            const assetSlug = makeAssetSlug(assetFileUrl);
+            const assetLocalPath = path.join(assetsDirName, assetSlug);
 
             $(el).attr(mapping[tag], assetLocalPath);
-            assetLinks.push({ name: assetFileName, link: assetFileUrl });
-            log('changed from %o to %o', assetFileUrl, assetFileName);
+            assetLinks.push({ name: assetSlug, link: assetFileUrl });
+            log('changed from %o to %o', assetFileUrl, assetSlug);
           }
         }));
-      return $.html();
+      html = $.html();
+      return html;
     })
-    .then((html) => fsPromises.writeFile(`${mainFilePath}.html`, html))
-    .then(() => log('%o has been written', mainFileName))
+    .then(() => fsPromises.writeFile(mainFilePath, html))
+    .then(() => log('%o has been written', mainSlug))
     .then(() => fsPromises.mkdir(assetsDirPath))
     .then(() => log('created directory for assets: %o', assetsDirPath))
     .then(() => {
       const tasks = assetLinks.map(({ name, link }) => {
         const assetFileLink = new URL(link, url);
-        const assetLocalPath = path.join(assetsDirPath, name);
+        const assetAbsolutePath = path.join(assetsDirPath, name);
         return {
           title: assetFileLink.href,
           task: () => axios
             .get(assetFileLink.href, { responseType: 'arraybuffer' })
-            .then((response) => fsPromises.writeFile(assetLocalPath, response.data))
+            .then(({ data }) => fsPromises.writeFile(assetAbsolutePath, data))
             .then(() => log('%o downloaded', name)),
         };
       });
