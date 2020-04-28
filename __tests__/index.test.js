@@ -12,14 +12,14 @@ const getFixturePath = (filename) => path.join(__dirname, '..', '__fixtures__', 
 
 
 describe('correct data test', () => {
-  const responseData = getFixturePath('before.html');
-  const resultData = getFixturePath('after.html');
+  const responseDataPath = getFixturePath('before.html');
+  const resultDataPath = getFixturePath('after.html');
   const url = new URL('https://antonlettuce.github.io/hexlet-basics/testing-file');
   const domain = url.origin;
 
   test('basic download', async () => {
     const tempDir = await fsPromises.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
-    const response = await fsPromises.readFile(responseData, 'utf-8');
+    const response = await fsPromises.readFile(responseDataPath, 'utf-8');
 
     nock(domain)
       .get(url.pathname)
@@ -36,7 +36,7 @@ describe('correct data test', () => {
 
     await pageLoader(url.href, tempDir);
 
-    const expectedHtml = await fsPromises.readFile(resultData, 'utf-8');
+    const expectedHtml = await fsPromises.readFile(resultDataPath, 'utf-8');
     const downloadedFilePath = path.join(tempDir, 'antonlettuce-github-io-hexlet-basics-testing-file.html');
     const actualHtml = await fsPromises.readFile(downloadedFilePath, 'utf-8');
     const assetPath = path.join(tempDir, 'antonlettuce-github-io-hexlet-basics-testing-file_files', 'assets-application.js');

@@ -52,7 +52,7 @@ export default (url, dir) => {
     .then(() => fsPromises.mkdir(assetsDirPath))
     .then(() => log('created directory for assets: %o', assetsDirPath))
     .then(() => {
-      const tasks = assetLinks.map(({ name, link }) => {
+      const tasks = new Listr(assetLinks.map(({ name, link }) => {
         const assetFileLink = new URL(link, url);
         const assetAbsolutePath = path.join(assetsDirPath, name);
         return {
@@ -62,7 +62,7 @@ export default (url, dir) => {
             .then(({ data }) => fsPromises.writeFile(assetAbsolutePath, data))
             .then(() => log('%o downloaded', name)),
         };
-      });
-      return new Listr(tasks, { concurrent: true, exitOnError: false }).run();
+      }), { concurrent: true, exitOnError: false });
+      return tasks.run();
     });
 };
