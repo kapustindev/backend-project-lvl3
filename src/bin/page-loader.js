@@ -10,8 +10,8 @@ program
   .option('--output [directory]', 'output dir', process.cwd())
   .action((pageUrl) => {
     downloadPage(pageUrl, program.output)
-      .then(() => {
-        console.log('Saved succesfully!');
+      .then((path) => {
+        console.log(`Saved succesfully as ${path}!`);
       })
       .catch((error) => {
         console.error(error.message);

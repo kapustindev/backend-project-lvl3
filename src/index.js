@@ -31,8 +31,9 @@ export default (url, dir) => {
     .get(url)
     .then(({ data }) => {
       const $ = cheerio.load(data);
-      Object.keys(mapping)
-        .map((tag) => $(tag).filter((i, el) => $(el).attr(mapping[tag])).each((i, el) => {
+      Object.keys(mapping).map((tag) => {
+        const existingTags = $(tag).filter((i, el) => $(el).attr(mapping[tag]));
+        const downloadableTags = existingTags.each((i, el) => {
           const assetFileUrl = $(el).attr(mapping[tag]);
 
           if (isLocal(assetFileUrl, site)) {
@@ -43,7 +44,9 @@ export default (url, dir) => {
             assetLinks.push({ name: assetSlug, link: assetFileUrl });
             log('changed from %o to %o', assetFileUrl, assetSlug);
           }
-        }));
+        });
+        return downloadableTags;
+      });
       html = $.html();
       return html;
     })
@@ -52,7 +55,7 @@ export default (url, dir) => {
     .then(() => fsPromises.mkdir(assetsDirPath))
     .then(() => log('created directory for assets: %o', assetsDirPath))
     .then(() => {
-      const tasks = new Listr(assetLinks.map(({ name, link }) => {
+      const tasks = assetLinks.map(({ name, link }) => {
         const assetFileLink = new URL(link, url);
         const assetAbsolutePath = path.join(assetsDirPath, name);
         return {
@@ -62,7 +65,9 @@ export default (url, dir) => {
             .then(({ data }) => fsPromises.writeFile(assetAbsolutePath, data))
             .then(() => log('%o downloaded', name)),
         };
-      }), { concurrent: true, exitOnError: false });
-      return tasks.run();
-    });
+      });
+      const listr = new Listr(tasks, { concurrent: true, exitOnError: false });
+      return listr.run();
+    })
+    .then(() => mainFilePath);
 };
